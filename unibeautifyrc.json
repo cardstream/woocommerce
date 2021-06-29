@@ -1,8 +1,0 @@
-{
-  "PHP": {
-    "beautifiers": [
-      "PHP-CS-Fixer",
-      "PHP_CodeSniffer"
-    ]
-  }
-}
