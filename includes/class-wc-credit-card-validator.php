@@ -1,6 +1,7 @@
 <?php
 
-class WC_Credit_Card_Validator {
+class WC_Credit_Card_Validator
+{
     protected static $cards = array(
         // Debit cards must come first, since they have more specific patterns than their credit-card equivalents.
         'visaelectron' => array(

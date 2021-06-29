@@ -2,8 +2,8 @@
 /**
  * Gateway class
  */
-class WC_Payment_Network extends WC_Payment_Gateway {
-
+class WC_Payment_Network extends WC_Payment_Gateway
+{
     const MMS_URL                  = 'https://mms.cardstream.com';
     const DEFAULT_HOSTED_URL       = 'https://gateway.cardstream.com/hosted/';
     const DEFAULT_HOSTED_MODAL_URL = 'https://gateway.cardstream.com/hosted/modal/';
@@ -12,12 +12,12 @@ class WC_Payment_Network extends WC_Payment_Gateway {
     const DEFAULT_SECRET           = 'Circle4Take40Idea';
 
     private $gateway     = 'PaymentNetwork';
-    public  $gateway_url = '';
+    public $gateway_url = '';
 
     public static $lang;
 
-    public function __construct() {
-
+    public function __construct()
+    {
         $id = str_replace(' ', '', strtolower($this->gateway));
 
         // Language translation module to use
@@ -28,7 +28,7 @@ class WC_Payment_Network extends WC_Payment_Gateway {
         $this->icon                = plugins_url('/', dirname(__FILE__)) . 'assets/img/logo.png';
         $this->method_title        = __(ucwords($this->gateway), self::$lang);
         $this->method_description  = __(ucwords($this->gateway) . ' hosted works by sending the user to ' . ucwords($this->gateway) . ' to enter their payment infomation', self::$lang);
-        $this->supports = array (
+        $this->supports = array(
             'subscriptions',
             'products',
             'subscription_cancellation',
@@ -61,34 +61,34 @@ class WC_Payment_Network extends WC_Payment_Gateway {
             }
 
             switch ($this->settings['type']) {
-                case 'direct':
-                    $this->gateway_url .= 'direct/';
-                    break;
-                case 'hosted_v3':
-                    $this->gateway_url .= 'hosted/modal/';
-                    break;
-                case 'hosted_v2':
-                case 'hosted':
-                default:
-                    $this->gateway_url .= 'hosted/';
+            case 'direct':
+                $this->gateway_url .= 'direct/';
+                break;
+            case 'hosted_v3':
+                $this->gateway_url .= 'hosted/modal/';
+                break;
+            case 'hosted_v2':
+            case 'hosted':
+            default:
+                $this->gateway_url .= 'hosted/';
             }
         } else {
             switch ($this->settings['type']) {
-                case 'direct':
-                    $this->gateway_url = self::DEFAULT_DIRECT_URL;
-                    break;
-                case 'hosted_v3':
-                    $this->gateway_url = self::DEFAULT_HOSTED_MODAL_URL;
-                    break;
-                case 'hosted_v2':
-                case 'hosted':
-                default:
-                    $this->gateway_url = self::DEFAULT_HOSTED_URL;
+            case 'direct':
+                $this->gateway_url = self::DEFAULT_DIRECT_URL;
+                break;
+            case 'hosted_v3':
+                $this->gateway_url = self::DEFAULT_HOSTED_MODAL_URL;
+                break;
+            case 'hosted_v2':
+            case 'hosted':
+            default:
+                $this->gateway_url = self::DEFAULT_HOSTED_URL;
             }
         }
 
         // Hooks
-        add_action( 'wp_enqueue_scripts', array( $this, 'payment_scripts' ) );
+        add_action('wp_enqueue_scripts', array( $this, 'payment_scripts' ));
 
         /* 1.6.6 */
         add_action('woocommerce_update_options_payment_gateways', array($this, 'process_admin_options'));
@@ -101,14 +101,14 @@ class WC_Payment_Network extends WC_Payment_Gateway {
         add_action('woocommerce_api_wc_' . $this->id . '_direct_callback', array($this, 'process_direct_callback'));
 
         /* 3.0.0 Subscriptions */
-        add_action('woocommerce_scheduled_subscription_payment_'. $this->id, array( $this, 'process_scheduled_subscription_payment_callback'),10,3);
+        add_action('woocommerce_scheduled_subscription_payment_'. $this->id, array( $this, 'process_scheduled_subscription_payment_callback'), 10, 3);
     }
 
     /**
      * Initialise Gateway Settings
      */
-    function init_form_fields() {
-
+    public function init_form_fields()
+    {
         $this->form_fields = array(
             'enabled' => array(
                 'title'       => __('Enable/Disable', self::$lang),
@@ -185,18 +185,18 @@ class WC_Payment_Network extends WC_Payment_Gateway {
                 'default'     => 'No'
             ),
         );
-
     }
 
     /**
      * You will need it if you want your custom credit card form, Step 4 is about it
      */
-    public function payment_fields() {
+    public function payment_fields()
+    {
 
         // ok, let's display some description before the payment form
-        if ( $this->description ) {
+        if ($this->description) {
             // you can instructions for test mode, I mean test card numbers etc.
-            echo wpautop( wp_kses_post( $this->description ) );
+            echo wpautop(wp_kses_post($this->description));
         }
 
         if ($this->settings['type'] === 'direct') {
@@ -206,22 +206,23 @@ class WC_Payment_Network extends WC_Payment_Gateway {
         }
     }
 
-    public function validate_fields() {
+    public function validate_fields()
+    {
         if ($this->settings['type'] === 'direct') {
             $result = WC_Credit_Card_Validator::validCreditCard($_POST['cardNumber']);
 
             if (!$result['valid']) {
-                wc_add_notice(  'Not a valid Card Number. Please check the card details.', 'error' );
+                wc_add_notice('Not a valid Card Number. Please check the card details.', 'error');
                 return false;
             }
 
             if (!WC_Credit_Card_Validator::validDate('20'.$_POST['cardExpiryYear'], $_POST['cardExpiryMonth'])) {
-                wc_add_notice(  'Not a valid Expiry Date. Please check the card details.', 'error' );
+                wc_add_notice('Not a valid Expiry Date. Please check the card details.', 'error');
                 return false;
             }
 
             if (!WC_Credit_Card_Validator::validCvc($_POST['cardCVV'], $result['type'])) {
-                wc_add_notice(  'Not a valid Card CVV. Please check the card details.', 'error' );
+                wc_add_notice('Not a valid Card CVV. Please check the card details.', 'error');
                 return false;
             }
         }
@@ -230,10 +231,11 @@ class WC_Payment_Network extends WC_Payment_Gateway {
     }
 
     /**
-     * @param $order_id
+     * @param  $order_id
      * @return array
      */
-    public function capture_order($order_id) {
+    public function capture_order($order_id)
+    {
         $order     = new WC_Order($order_id);
         $amount    = intval(bcmul(round($order->get_total(), 2), 100, 0));
 
@@ -257,7 +259,7 @@ class WC_Payment_Network extends WC_Payment_Gateway {
 
         // Fields for hash
         $req = array(
-            'action'			  => 'SALE',
+            'action'              => 'SALE',
             'merchantID'          => $this->settings['merchantID'],
             'amount'              => $amount,
             'countryCode'         => $this->settings['countryCode'],
@@ -267,8 +269,8 @@ class WC_Payment_Network extends WC_Payment_Gateway {
             'orderRef'            => $order_id,
             'customerName'        => $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
             'customerAddress'     => $billing_address,
-            'customerCounty'	  => $order->get_billing_state(),
-            'customerTown'		  => $order->get_billing_city(),
+            'customerCounty'      => $order->get_billing_state(),
+            'customerTown'          => $order->get_billing_city(),
             'customerPostCode'    => $order->get_billing_postcode(),
             'customerEmail'       => $order->get_billing_email(),
         );
@@ -291,17 +293,19 @@ class WC_Payment_Network extends WC_Payment_Gateway {
 
             //Query table. Select customer wallet where belongs to user id and current configured merchant.
             $customersWalletID = $wpdb->get_var(
-                $wpdb->prepare( "SELECT wallets_id FROM {$wallet_table_name} WHERE users_id = %d AND merchants_id = %d LIMIT 1",
-                    get_current_user_id(), $this->settings['merchantID']));
+                $wpdb->prepare(
+                    "SELECT wallets_id FROM {$wallet_table_name} WHERE users_id = %d AND merchants_id = %d LIMIT 1",
+                    get_current_user_id(),
+                    $this->settings['merchantID']
+                )
+            );
 
             //If the customer wallet record exists.
-            if($customersWalletID > 0)
-            {
+            if ($customersWalletID > 0) {
                 //Add walletID to request.
                 $req['walletID'] = $customersWalletID;
                 $req['walletEnabled'] = 'Y';
                 $req['walletRequired'] = 'Y';
-
             } else {
                 //Create a new wallet.
                 $req['walletStore'] = 'Y';
@@ -322,7 +326,8 @@ class WC_Payment_Network extends WC_Payment_Gateway {
      *
      * @return array
      */
-    function process_payment($order_id) {
+    public function process_payment($order_id)
+    {
         $order = new WC_Order($order_id);
 
         if (in_array($this->settings['type'], ['hosted', 'hosted_v2', 'hosted_v3'], true)) {
@@ -367,7 +372,6 @@ class WC_Payment_Network extends WC_Payment_Gateway {
             }
 
             if ($response['responseCode'] == 65802) {
-
                 $threeDSVersion = (int) str_replace('.', '', $response['threeDSVersion']);
 
                 if ($threeDSVersion >= 200) {
@@ -410,7 +414,7 @@ class WC_Payment_Network extends WC_Payment_Gateway {
                 return $this->process_response($response);
             }
         } catch (RuntimeException $exception) {
-            wc_add_notice(  'Connection error.', 'error' );
+            wc_add_notice('Connection error.', 'error');
             return [];
         }
     }
@@ -418,37 +422,42 @@ class WC_Payment_Network extends WC_Payment_Gateway {
     /**
      * receipt_page
      */
-    function receipt_page($order) {
+    public function receipt_page($order)
+    {
         switch ($this->settings['type']) {
-            case 'hosted':
-            case 'hosted_v3':
-                echo $this->generate_hosted_form($order);
-                break;
-            case 'hosted_v2':
-                echo $this->generate_embedded_form($order);
-                break;
-//            // we never should arrive here, because we have direct integration implemented via wordpress `payment_fields` functionality
-            case 'direct':
-            default;
-                return null;
+        case 'hosted':
+        case 'hosted_v3':
+            echo $this->generate_hosted_form($order);
+            break;
+        case 'hosted_v2':
+            echo $this->generate_embedded_form($order);
+            break;
+        //            // we never should arrive here, because we have direct integration implemented via wordpress `payment_fields` functionality
+        case 'direct':
+        default:
+            return null;
         }
     }
 
     /**
      * Hosted form
-     * @param $order_id
+     *
+     * @param  $order_id
      * @return string
      */
-    protected function generate_hosted_form($order_id) {
+    protected function generate_hosted_form($order_id)
+    {
         $redirect  = add_query_arg('wc-api', 'wc_' . $this->id, home_url('/'));
         $callback  = add_query_arg('wc-api', 'wc_' . $this->id, home_url('/'));
 
-        $req = array_merge($this->capture_order($order_id), array(
+        $req = array_merge(
+            $this->capture_order($order_id), array(
             'redirectURL'       => $redirect,
             'callbackURL'       => $callback,
             'formResponsive'    => $this->settings['formResponsive'],
             'threeDSVersion'    => 2,
-        ));
+            )
+        );
 
         if (isset($this->settings['signature']) && !empty($this->settings['signature'])) {
             $req['signature'] = $this->create_signature($req, $this->settings['signature']);
@@ -472,22 +481,24 @@ class WC_Payment_Network extends WC_Payment_Gateway {
     };
 </script>
 FORM;
-
     }
 
     /**
      * Embedded form
      */
-    protected function generate_embedded_form($order_id) {
+    protected function generate_embedded_form($order_id)
+    {
         $redirect  = add_query_arg('wc-api', 'wc_' . $this->gateway, home_url('/'));
         $callback  = add_query_arg('wc-api', 'wc_' . $this->gateway, home_url('/'));
 
-        $req = array_merge($this->capture_order($order_id), array(
+        $req = array_merge(
+            $this->capture_order($order_id), array(
             'redirectURL'       => $redirect,
             'callbackURL'       => $callback,
             'formResponsive'    => $this->settings['formResponsive'],
             'threeDSVersion'    => 2,
-        ));
+            )
+        );
 
         if (isset($this->settings['signature']) && !empty($this->settings['signature'])) {
             $req['signature'] = $this->create_signature($req, $this->settings['signature']);
@@ -519,9 +530,11 @@ FORM;
 
     /**
      * Direct form step 1
+     *
      * @return string
      */
-    protected function generate_direct_initial_request_form() {
+    protected function generate_direct_initial_request_form()
+    {
         $parameters = [
             'cardNumber'         => @$_POST['cardNumber'],
             'cardExpiryMonth'    => @$_POST['cardExpiryMonth'],
@@ -530,15 +543,15 @@ FORM;
         ];
 
         $deviceData = [
-            'deviceChannel'				=> 'browser',
-            'deviceIdentity'			=> (isset($_SERVER['HTTP_USER_AGENT']) ? htmlentities($_SERVER['HTTP_USER_AGENT']) : null),
-            'deviceTimeZone'			=> '0',
-            'deviceCapabilities'		=> '',
-            'deviceScreenResolution'	=> '1x1x1',
-            'deviceAcceptContent'		=> (isset($_SERVER['HTTP_ACCEPT']) ? htmlentities($_SERVER['HTTP_ACCEPT']) : null),
-            'deviceAcceptEncoding'		=> (isset($_SERVER['HTTP_ACCEPT_ENCODING']) ? htmlentities($_SERVER['HTTP_ACCEPT_ENCODING']) : null),
-            'deviceAcceptLanguage'		=> (isset($_SERVER['HTTP_ACCEPT_LANGUAGE']) ? htmlentities($_SERVER['HTTP_ACCEPT_LANGUAGE']) : null),
-            'deviceAcceptCharset'		=> (isset($_SERVER['HTTP_ACCEPT_CHARSET']) ? htmlentities($_SERVER['HTTP_ACCEPT_CHARSET']) : null),
+            'deviceChannel'                => 'browser',
+            'deviceIdentity'            => (isset($_SERVER['HTTP_USER_AGENT']) ? htmlentities($_SERVER['HTTP_USER_AGENT']) : null),
+            'deviceTimeZone'            => '0',
+            'deviceCapabilities'        => '',
+            'deviceScreenResolution'    => '1x1x1',
+            'deviceAcceptContent'        => (isset($_SERVER['HTTP_ACCEPT']) ? htmlentities($_SERVER['HTTP_ACCEPT']) : null),
+            'deviceAcceptEncoding'        => (isset($_SERVER['HTTP_ACCEPT_ENCODING']) ? htmlentities($_SERVER['HTTP_ACCEPT_ENCODING']) : null),
+            'deviceAcceptLanguage'        => (isset($_SERVER['HTTP_ACCEPT_LANGUAGE']) ? htmlentities($_SERVER['HTTP_ACCEPT_LANGUAGE']) : null),
+            'deviceAcceptCharset'        => (isset($_SERVER['HTTP_ACCEPT_CHARSET']) ? htmlentities($_SERVER['HTTP_ACCEPT_CHARSET']) : null),
         ];
 
         $browserInfo = '';
@@ -638,7 +651,8 @@ FORM;
     /**
      * Check for response from payment gateway
      */
-    function process_response($data = null) {
+    public function process_response($data = null)
+    {
         global $woocommerce;
 
         $_POST = array_map('stripslashes_deep', $_POST);
@@ -676,11 +690,13 @@ FORM;
             //If the customer wallet record does not exists.
             if ($customersWalletID === null) {
                 //Add walletID to request.
-                $wpdb->insert($wallet_table_name, [
+                $wpdb->insert(
+                    $wallet_table_name, [
                     'users_id' => $order->get_user_id(),
                     'merchants_id' => $this->settings['merchantID'],
                     'wallets_id' => $response['walletID']
-                ]);
+                    ]
+                );
             }
         }
 
@@ -691,7 +707,6 @@ FORM;
                     'redirect' => $this->get_return_url($order),
                 ];
             } else {
-
                 $orderNotes  = "\r\nResponse Code : {$response['responseCode']}\r\n";
                 $orderNotes .= "Message : {$response['responseMessage']}\r\n";
                 $orderNotes .= "Amount Received : " . number_format($response['amount'] / 100, 2, '.', ',') . "\r\n";
@@ -729,9 +744,9 @@ FORM;
         }
     }
 
-    ##########################
-    ## Callbacks
-    ##########################
+    // 
+    // Callbacks
+    // 
 
     /**
      * Hook to process a subscriptions payment
@@ -739,15 +754,24 @@ FORM;
      * @param $amount_to_charge
      * @param $renewal_order
      */
-    public function process_scheduled_subscription_payment_callback($amount_to_charge, $renewal_order) {
+    public function process_scheduled_subscription_payment_callback($amount_to_charge, $renewal_order)
+    {
         // Gets all subscriptions (hopefully just one) linked to this order
         $subs = wcs_get_subscriptions_for_renewal_order($renewal_order);
 
         // Get all orders on this subscription and remove any that haven't been paid
-        $orders = array_filter(current($subs)->get_related_orders('all'),function($ord){return $ord->is_paid();});
+        $orders = array_filter(
+            current($subs)->get_related_orders('all'), function ($ord) {
+                return $ord->is_paid();
+            }
+        );
 
         // Replace every order with orderId=>xref kvps
-        $xrefs = array_map(function($ord){return $ord->get_transaction_id();},$orders);
+        $xrefs = array_map(
+            function ($ord) {
+                return $ord->get_transaction_id();
+            }, $orders
+        );
 
         // Return the xref corresponding to the most recent order (assuming order number increase with time)
         $xref = $xrefs[max(array_keys($xrefs))];
@@ -779,8 +803,8 @@ FORM;
             $orderNotes .= "Amount Received : " . number_format($res['amount'] / 100, 2, '.', ',') . "\r\n";
             $orderNotes .= "Unique Transaction Code : {$res['transactionUnique']}";
 
-            if($this->check_signature($res,$this->settings['signature'])){
-                if(isset($res['responseCode']) && $res['responseCode']==0) {
+            if ($this->check_signature($res, $this->settings['signature'])) {
+                if (isset($res['responseCode']) && $res['responseCode']==0) {
                     $renewal_order->set_transaction_id($res['xref']);
                     $renewal_order->add_order_note(__(ucwords($this->gateway) . ' payment completed.' . $orderNotes, self::$lang));
                     $renewal_order->payment_complete();
@@ -789,34 +813,35 @@ FORM;
                 } else {
                     $renewal_order->add_order_note(__(ucwords($this->gateway) . ' payment failed with signature error.' . $orderNotes, self::$lang));
                     $renewal_order->save();
-                    $result = new WP_Error('payment_failed_error','recurring payment failed due to gateway decline');
+                    $result = new WP_Error('payment_failed_error', 'recurring payment failed due to gateway decline');
                 }
             } else {
                 $renewal_order->add_order_note(__(ucwords($this->gateway).' payment failed' . $orderNotes, self::$lang));
                 $renewal_order->save();
-                $result = new WP_Error('signature_error','recurring payment failed due to signature error');
+                $result = new WP_Error('signature_error', 'recurring payment failed due to signature error');
             }
         } else {
             $renewal_order->add_order_note(__(ucwords($this->gateway).' payment failed. Could not communicate with direct API. Curl data: ' . json_encode($info), self::$lang));
             $renewal_order->save();
-            $result = new WP_Error('payment_failed_error','recurring payment failed due to communication error');
+            $result = new WP_Error('payment_failed_error', 'recurring payment failed due to communication error');
         }
 
-        if (is_wp_error( $result )) {
-            WC_Subscriptions_Manager::process_subscription_payment_failure_on_order( $renewal_order );
+        if (is_wp_error($result)) {
+            WC_Subscriptions_Manager::process_subscription_payment_failure_on_order($renewal_order);
         } else {
-            WC_Subscriptions_Manager::process_subscription_payments_on_order( $renewal_order );
+            WC_Subscriptions_Manager::process_subscription_payments_on_order($renewal_order);
         }
     }
 
     /**
      * Callback for Direct Response Initial Request
      */
-    public function process_direct_callback() {
+    public function process_direct_callback()
+    {
         // v1
         if (isset($_REQUEST['MD'], $_REQUEST['PaRes'])) {
             $req = array(
-                'action'	   => 'SALE',
+                'action'       => 'SALE',
                 'merchantID'   => $this->settings['merchantID'],
                 'xref'         => $_COOKIE['xref'],
                 'threeDSMD'    => $_REQUEST['MD'],
@@ -848,7 +873,6 @@ FORM;
             $response = $this->post($req);
 
             if ($response['responseCode'] == 65802) {
-
                 setcookie('threeDSRef', $response['threeDSRef'], time()+315);
 
                 // Silently POST the 3DS request to the ACS in the IFRAME
@@ -866,40 +890,43 @@ FORM;
     /**
      * Callback for processing response for all type of Hosted integrations
      */
-    public function process_hosted_callback() {
+    public function process_hosted_callback()
+    {
         $data = $this->process_response();
 
         $this->redirect($data['redirect']);
     }
 
 
-    public function payment_scripts() {
+    public function payment_scripts()
+    {
         // we need JavaScript to process a token only on cart/checkout pages, right?
-        if ( ! is_cart() && ! is_checkout() ) {
+        if (! is_cart() && ! is_checkout()) {
             return;
         }
 
         // if our payment gateway is disabled, we do not have to enqueue JS too
-        if ( 'no' === $this->enabled ) {
+        if ('no' === $this->enabled) {
             return;
         }
 
         // and this is our custom JS in your plugin directory that works with token.js
-        wp_register_script( 'woocommerce_payform', plugins_url('assets/js/payform.js', dirname(__FILE__)), array( 'jquery') );
+        wp_register_script('woocommerce_payform', plugins_url('assets/js/payform.js', dirname(__FILE__)), array( 'jquery'));
 
-        wp_enqueue_script( 'woocommerce_payform' );
+        wp_enqueue_script('woocommerce_payform');
     }
-    ##########################
-    ## Helper functions
-    ##########################
+    // 
+    // Helper functions
+    // 
 
     /**
      * Redirect to the checkout when the server response is not legitimate
      *
-     * @param $order
+     * @param  $order
      * @return array
      */
-    protected function throw_signature_error($order) {
+    protected function throw_signature_error($order)
+    {
         global $woocommerce;
 
         $message = "\r\n" . __('Payment error: ', 'woothemes') . "Signature Check Failed";
@@ -916,7 +943,8 @@ FORM;
         ];
     }
 
-    protected function throw_empty_response() {
+    protected function throw_empty_response()
+    {
         global $woocommerce;
 
         $message = 'Payment unsuccessful - empty response (contact Administrator)';
@@ -935,11 +963,12 @@ FORM;
     /**
      * Check the signature received in a response
      *
-     * @param array $data
-     * @param $key
+     * @param  array $data
+     * @param  $key
      * @return bool
      */
-    protected function check_signature(array $data, $key) {
+    protected function check_signature(array $data, $key)
+    {
         $current_sig = $data['signature'];
         unset($data['signature']);
         $generated_sig = $this->create_signature($data, $key);
@@ -949,19 +978,20 @@ FORM;
     /**
      * Redirect to the URL provided depending on integration type
      */
-    protected function redirect($url) {
+    protected function redirect($url)
+    {
         if ($this->settings['type'] === 'hosted_v2') {
             echo <<<SCRIPT
 <script>window.top.location.href = "$url";</script>;
 SCRIPT;
-
         } else {
             wp_safe_redirect($url);
         }
         exit;
     }
 
-    protected function post($parameters, $options = null) {
+    protected function post($parameters, $options = null)
+    {
         $gatewayUrl = isset($options['gatewayURL']) && !empty($options['gatewayURL']) ? $options['gatewayURL'] : $this->gateway_url;
 
         $ch = curl_init($gatewayUrl);
@@ -979,7 +1009,8 @@ SCRIPT;
     /**
      * Function to generate a signature
      */
-    protected function create_signature(array $data, $key) {
+    protected function create_signature(array $data, $key)
+    {
         if (!$key || !is_string($key) || $key === '' || !$data || !is_array($data)) {
             return null;
         }
@@ -994,12 +1025,11 @@ SCRIPT;
 
         // Hash the signature string and the key together
         return hash('SHA512', $ret . $key);
-
     }
 
     // Render HTML to silently POST data to URL in target brower window
-    protected function silentPost($url = '?', array $post = null, $target = '_self') {
-
+    protected function silentPost($url = '?', array $post = null, $target = '_self')
+    {
         $url = htmlentities($url);
         $target = htmlentities($target);
         $fields = '';
@@ -1025,7 +1055,8 @@ SCRIPT;
         return $ret;
     }
 
-    protected function fieldToHtml($name, $value) {
+    protected function fieldToHtml($name, $value)
+    {
         $ret = '';
         if (is_array($value)) {
             foreach ($value as $n => $v) {
@@ -1033,7 +1064,11 @@ SCRIPT;
             }
         } else {
             // Convert all applicable characters or none printable characters to HTML entities
-            $value = preg_replace_callback('/[\x00-\x1f]/', function($matches) { return '&#' . ord($matches[0]) . ';'; }, htmlentities($value, ENT_COMPAT, 'UTF-8', true));
+            $value = preg_replace_callback(
+                '/[\x00-\x1f]/', function ($matches) {
+                    return '&#' . ord($matches[0]) . ';';
+                }, htmlentities($value, ENT_COMPAT, 'UTF-8', true)
+            );
             $ret = "<input type=\"hidden\" name=\"{$name}\" value=\"{$value}\" />\n";
         }
 
