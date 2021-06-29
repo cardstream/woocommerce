@@ -1,0 +1,10 @@
+---
+PHP:
+  beautifiers:
+  - PHP-CS-Fixer
+  - PHP_CodeSniffer
+  PHP-CS-Fixer:
+    normalize_index_brace: true
+    no_unneeded_curly_braces: true
+    no_spaces_around_offset: true
+    
